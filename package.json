@@ -4,6 +4,8 @@
   "description": "The Circle Avans chat server",
   "main": "index.js",
   "scripts": {
+    "build": "echo 'test'",
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
