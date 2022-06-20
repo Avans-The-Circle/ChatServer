@@ -1,10 +1,47 @@
-import { WebSocketServer } from 'ws';
+import { createServer } from 'http';
+import { parse } from 'url';
 import lzstring from 'lz-string';
+import { WebSocketServer } from 'ws';
 
-const wss = new WebSocketServer({ port: process.env.PORT || 8080 });
+const server = createServer();
+const wss = new WebSocketServer({ noServer: true });
+const wssBinary = new WebSocketServer({ noServer: true });
+wssBinary.binaryType = "blob";
+
+wssBinary.on('connection', function connection(ws) {
+    console.log("[binary]Connection started", ws.streamId)
+    ws.on('message', async function message(data, isBinary) {
+        console.log("[binary]received data", isBinary)
+        wss.clients.forEach(function each(client) {
+            if (ws.streamId === client.streamId) {
+                client.send(data, { binary: isBinary });
+            }
+        });
+    });
+});
+
+server.on('upgrade', function upgrade(request, socket, head) {
+    const { pathname } = parse(request.url);
+    if (pathname.split('/')[1] === "binary") {
+        console.log("Upgrading to binary stream", pathname)
+        wss.handleUpgrade(request, socket, head, function done(ws) {
+            ws.streamId = pathname.split('/')[2]
+            wss.emit('connection', ws, request);
+        });
+    }else{
+        console.log("Upgrading to websocket")
+        wss.handleUpgrade(request, socket, head, function done(ws) {
+            wss.emit('connection', ws, request);
+        });
+    }
+});
+
+server.listen(8080);
+
+// const wss = new WebSocketServer({ port: process.env.PORT || 8080 });43
 console.log("Running in port", process.env.PORT || 8080)
 wss.on('connection', function connection(ws) {
-    console.log("new ocnnection")
+    console.log("new connection", ws.streamId)
     ws.on('message', async function message(data) {
         data = JSON.parse(data);
         if (data.compressed === true) {
