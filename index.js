@@ -18,10 +18,6 @@ wss.on('connection', function connection(ws) {
                 break;
             case "STREAM_FRAME":
                 console.log(`[${data.frameCounter}]incomming frame ${data.frame_timing} == ${(new Date()).getTime()}`)
-                ws.send(JSON.stringify({
-                        "type": "SEND_NEXT_FRAME"
-                    }
-                ))
                 wss.clients.forEach(function each(client) {
                     if (ws.streamId === client.streamId) {
                         client.send(JSON.stringify({
@@ -31,6 +27,10 @@ wss.on('connection', function connection(ws) {
                         ));
                     }
                 });
+                ws.send(JSON.stringify({
+                        "type": "SEND_NEXT_FRAME"
+                    }
+                ))
                 break;
             case "SEND_MESSAGE":
                 if(ws.streamId === -1) return;
