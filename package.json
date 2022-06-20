@@ -15,6 +15,7 @@
   "author": "Avans The Circle Avans",
   "license": "ISC",
   "dependencies": {
+    "lz-string": "^1.4.4",
     "ws": "^8.8.0"
   },
   "type": "module"
