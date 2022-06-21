@@ -1,16 +1,18 @@
-// import { createServer } from 'https';
-// import { readFileSync } from 'fs';
 import { createServer } from 'http';
 import { parse } from 'url';
 import lzstring from 'lz-string';
 import { WebSocketServer } from 'ws';
+import { readFileSync } from 'fs';
+import forge from 'node-forge';
 
+
+let publicKey = forge.pki.publicKeyFromPem(readFileSync('./keys/public.pem'));
 const server = createServer({
     // key: readFileSync('./keys/key.pem'),
     // cert: readFileSync('./keys/cert.pem'),
     // secureOptions: constants.SSL_OP_NO_TLSv1_1 | constants.SSL_OP_NO_TLSv1_2 | constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3,
     // ciphers: null
-})
+});
 
 const wss = new WebSocketServer({noServer: true});
 // const wssBinary = new WebSocketServer({noServer: true});
@@ -89,17 +91,27 @@ wss.on('connection', function connection(ws) {
                         clientCount++;
                     }
                 });
-
-                wss.clients.forEach(function each(client) {
-                    if (ws.streamId === client.streamId && client.isWatcher) {
-                        client.send(JSON.stringify({
-                            "type": "INCOMMING_STREAM",
-                            "frame": data.frame,
-                            "clientCount": clientCount,
-                            "signature": data.signature
-                        }));
+                try {
+                    let md = forge.md.sha256.create();
+                    md.update(data.frame);
+                    let signature = data.signature;
+                    let verified = publicKey.verify(md.digest().bytes(), signature);
+                    if (verified) {
+                        wss.clients.forEach(function each(client) {
+                            if (ws.streamId === client.streamId && client.isWatcher) {
+                                client.send(JSON.stringify({
+                                    "type": "INCOMMING_STREAM",
+                                    "frame": data.frame,
+                                    "clientCount": clientCount,
+                                    "signature": data.signature
+                                }));
+                            }
+                        });
                     }
-                });
+                } catch (error) {
+                    console.log(error);
+                }
+
                 ws.send(JSON.stringify({
                     "type": "SEND_NEXT_FRAME",
                     "clientCount": clientCount,
@@ -108,18 +120,27 @@ wss.on('connection', function connection(ws) {
             case "SEND_MESSAGE":
                 if (ws.streamId === -1) return;
                 //Message to backend
-                wss.clients.forEach(function each(client) {
-                    console.log(ws.streamId, client.streamId, client.isChatter)
-                    if (ws.streamId === client.streamId && client.isChatter) {
-                        client.send(JSON.stringify({
-                                "type": "CHAT_MESSAGE",
-                                "message": data.message,
-                                "sender": data.sender,
-                                "signature": data.signature
+                try {
+                    let mdMsg = forge.md.sha256.create();
+                    mdMsg.update(data.message, "utf8");
+                    let signatureMsg = data.signature;
+                    let verify = publicKey.verify(mdMsg.digest().bytes(), signatureMsg);
+                    if (verify) {
+                        wss.clients.forEach(function each(client) {
+                            if (ws.streamId === client.streamId && client.isChatter) {
+                                client.send(JSON.stringify({
+                                    "type": "CHAT_MESSAGE",
+                                    "message": data.message,
+                                    "sender": data.sender,
+                                    "signature": data.signature
+                                }
+                                ));
                             }
-                        ));
+                        });
                     }
-                });
+                } catch (error) {
+                    console.log(error);
+                }
                 break;
         }
     });
