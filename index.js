@@ -56,34 +56,45 @@ wss.on('connection', function connection(ws) {
         if (data.compressed === true) {
             data = JSON.parse(lzstring.decompress(data.data));
         }
-        // console.log(data);
+        console.log(`[Incomming]${data.type}`);
         switch (data.type) {
             case "OPEN_CONNECTION":
                 ws.streamId = data.streamId;
+                ws.isStreamer = data.isStreamer ?? false;
+                ws.isChatter = data.isChatter ?? false;
+                ws.isWatcher = data.isWatcher ?? false;
                 ws.send(JSON.stringify({"type": "CONFIRM_CONNECTION", "streamId": data.streamId}));
                 break;
             case "STREAM_FRAME":
-                console.log(`[${data.frameCounter}]incomming frame ${data.frame_timing} == ${(new Date()).getTime()}`)
+                // console.log(`[${data.frameCounter}]incomming frame ${data.frame_timing} == ${(new Date()).getTime()}`)
+                let clientCount = 0;
                 wss.clients.forEach(function each(client) {
-                    if (ws.streamId === client.streamId) {
+                    if (ws.streamId === client.streamId && client.isWatcher) {
+                        clientCount++;
+                    }
+                });
+
+                wss.clients.forEach(function each(client) {
+                    if (ws.streamId === client.streamId && client.isWatcher) {
                         client.send(JSON.stringify({
-                                "type": "INCOMMING_STREAM",
-                                "frame": data.frame,
-                                "signature": data.signature
-                            }
-                        ));
+                            "type": "INCOMMING_STREAM",
+                            "frame": data.frame,
+                            "clientCount": clientCount,
+                            "signature": data.signature
+                        }));
                     }
                 });
                 ws.send(JSON.stringify({
-                        "type": "SEND_NEXT_FRAME"
-                    }
-                ))
+                    "type": "SEND_NEXT_FRAME",
+                    "clientCount": clientCount,
+                }))
                 break;
             case "SEND_MESSAGE":
                 if (ws.streamId === -1) return;
                 //Message to backend
                 wss.clients.forEach(function each(client) {
-                    if (ws.streamId === client.streamId) {
+                    console.log(ws.streamId, client.streamId, client.isChatter)
+                    if (ws.streamId === client.streamId && client.isChatter) {
                         client.send(JSON.stringify({
                                 "type": "CHAT_MESSAGE",
                                 "message": data.message,
