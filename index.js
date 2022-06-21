@@ -65,7 +65,7 @@ wss.on('connection', function connection(ws) {
                 try {
                     let md = forge.md.sha256.create();
                     md.update(data.frame);
-                    signature = data.signature;
+                    let signature = data.signature;
                     let verified = publicKey.verify(md.digest().bytes(), signature);
                     if (verified) {
                         wss.clients.forEach(function each(client) {
