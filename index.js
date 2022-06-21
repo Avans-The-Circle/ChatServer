@@ -1,12 +1,12 @@
-import { createServer } from 'https';
+import { createServer } from 'http';
 import { parse } from 'url';
 import lzstring from 'lz-string';
 import { WebSocketServer } from 'ws';
 import { readFileSync } from 'fs';
 
 const server = createServer({
-    key: readFileSync('./keys/key.pem'),
-    cert: readFileSync('./keys/cert.pem')
+    // key: readFileSync('./keys/key.pem'),
+    // cert: readFileSync('./keys/cert.pem')
 });
 const wss = new WebSocketServer({noServer: true});
 const wssBinary = new WebSocketServer({noServer: true});
@@ -65,6 +65,7 @@ wss.on('connection', function connection(ws) {
                         client.send(JSON.stringify({
                                 "type": "INCOMMING_STREAM",
                                 "frame": data.frame,
+                                "signature": data.signature
                             }
                         ));
                     }
