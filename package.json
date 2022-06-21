@@ -15,6 +15,9 @@
   "author": "Avans The Circle Avans",
   "license": "ISC",
   "dependencies": {
+    "hls.js": "^1.1.5",
+    "node-media-server": "^2.3.12",
+    "rtmp-server": "^0.2.0",
     "ws": "^8.8.0"
   },
   "type": "module"
