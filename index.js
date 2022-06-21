@@ -129,11 +129,11 @@ wss.on('connection', function connection(ws) {
                         wss.clients.forEach(function each(client) {
                             if (ws.streamId === client.streamId && client.isChatter) {
                                 client.send(JSON.stringify({
-                                    "type": "CHAT_MESSAGE",
-                                    "message": data.message,
-                                    "sender": data.sender,
-                                    "signature": data.signature
-                                }
+                                        "type": "CHAT_MESSAGE",
+                                        "message": data.message,
+                                        "sender": data.sender,
+                                        "signature": data.signature
+                                    }
                                 ));
                             }
                         });
