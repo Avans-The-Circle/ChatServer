@@ -1,13 +1,17 @@
+// import { createServer } from 'https';
+// import { readFileSync } from 'fs';
 import { createServer } from 'http';
 import { parse } from 'url';
 import lzstring from 'lz-string';
 import { WebSocketServer } from 'ws';
-import { readFileSync } from 'fs';
 
 const server = createServer({
     // key: readFileSync('./keys/key.pem'),
-    // cert: readFileSync('./keys/cert.pem')
-});
+    // cert: readFileSync('./keys/cert.pem'),
+    // secureOptions: constants.SSL_OP_NO_TLSv1_1 | constants.SSL_OP_NO_TLSv1_2 | constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3,
+    // ciphers: null
+})
+
 const wss = new WebSocketServer({noServer: true});
 const wssBinary = new WebSocketServer({noServer: true});
 wssBinary.binaryType = "blob";
@@ -81,11 +85,11 @@ wss.on('connection', function connection(ws) {
                 wss.clients.forEach(function each(client) {
                     if (ws.streamId === client.streamId) {
                         client.send(JSON.stringify({
-                            "type": "CHAT_MESSAGE",
-                            "message": data.message,
-                            "sender": data.sender,
-                            "signature": data.signature
-                        }
+                                "type": "CHAT_MESSAGE",
+                                "message": data.message,
+                                "sender": data.sender,
+                                "signature": data.signature
+                            }
                         ));
                     }
                 });
