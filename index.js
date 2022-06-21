@@ -13,36 +13,36 @@ const server = createServer({
 })
 
 const wss = new WebSocketServer({noServer: true});
-const wssBinary = new WebSocketServer({noServer: true});
-wssBinary.binaryType = "blob";
-
-
-wssBinary.on('connection', function connection(ws) {
-    console.log("[binary]Connection started", ws.streamId)
-    ws.on('message', async function message(data, isBinary) {
-        console.log("[binary]received data", isBinary)
-        wss.clients.forEach(function each(client) {
-            if (ws.streamId === client.streamId) {
-                client.send(data, {binary: isBinary});
-            }
-        });
-    });
-});
+// const wssBinary = new WebSocketServer({noServer: true});
+// wssBinary.binaryType = "blob";
+//
+//
+// wssBinary.on('connection', function connection(ws) {
+//     console.log("[binary]Connection started", ws.streamId)
+//     ws.on('message', async function message(data, isBinary) {
+//         console.log("[binary]received data", isBinary)
+//         wss.clients.forEach(function each(client) {
+//             if (ws.streamId === client.streamId) {
+//                 client.send(data, {binary: isBinary});
+//             }
+//         });
+//     });
+// });
 
 server.on('upgrade', function upgrade(request, socket, head) {
-    const {pathname} = parse(request.url);
-    if (pathname.split('/')[1] === "binary") {
-        console.log("Upgrading to binary stream", pathname)
-        wssBinary.handleUpgrade(request, socket, head, function done(ws) {
-            ws.streamId = pathname.split('/')[2]
-            wssBinary.emit('connection', ws, request);
-        });
-    } else {
-        console.log("Upgrading to websocket")
-        wss.handleUpgrade(request, socket, head, function done(ws) {
-            wss.emit('connection', ws, request);
-        });
-    }
+    // const {pathname} = parse(request.url);
+    // if (pathname.split('/')[1] === "binary") {
+    //     console.log("Upgrading to binary stream", pathname)
+    //     wssBinary.handleUpgrade(request, socket, head, function done(ws) {
+    //         ws.streamId = pathname.split('/')[2]
+    //         wssBinary.emit('connection', ws, request);
+    //     });
+    // } else {
+    // }
+    console.log("Upgrading to websocket")
+    wss.handleUpgrade(request, socket, head, function done(ws) {
+        wss.emit('connection', ws, request);
+    });
 });
 
 server.listen(8080);
@@ -56,13 +56,29 @@ wss.on('connection', function connection(ws) {
         if (data.compressed === true) {
             data = JSON.parse(lzstring.decompress(data.data));
         }
-        console.log(`[Incomming]${data.type}`);
+        // console.log(`[Incomming]${data.type}`);
         switch (data.type) {
             case "OPEN_CONNECTION":
                 ws.streamId = data.streamId;
                 ws.isStreamer = data.isStreamer ?? false;
                 ws.isChatter = data.isChatter ?? false;
                 ws.isWatcher = data.isWatcher ?? false;
+
+                let streamerList = [];
+                wss.clients.forEach(function each(client) {
+                    if (client.isStreamer) {
+                        streamerList.push(client.streamId)
+                    }
+                });
+                console.log(`Broadcasting ${streamerList.length} streamers`)
+                wss.clients.forEach(function each(client) {
+                    if (client.isWatcher) {
+                        client.send(JSON.stringify({
+                            "type": "AVAILABLE_CLIENTS",
+                            "streamerList": streamerList,
+                        }));
+                    }
+                });
                 ws.send(JSON.stringify({"type": "CONFIRM_CONNECTION", "streamId": data.streamId}));
                 break;
             case "STREAM_FRAME":
