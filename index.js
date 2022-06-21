@@ -1,5 +1,3 @@
-// import { createServer } from 'https';
-// import { readFileSync } from 'fs';
 import { createServer } from 'http';
 import { parse } from 'url';
 import lzstring from 'lz-string';
@@ -17,13 +15,6 @@ const server = createServer({
 });
 const wss = new WebSocketServer({ noServer: true });
 const wssBinary = new WebSocketServer({ noServer: true });
-    // cert: readFileSync('./keys/cert.pem'),
-    // secureOptions: constants.SSL_OP_NO_TLSv1_1 | constants.SSL_OP_NO_TLSv1_2 | constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3,
-    // ciphers: null
-})
-
-const wss = new WebSocketServer({noServer: true});
-const wssBinary = new WebSocketServer({noServer: true});
 wssBinary.binaryType = "blob";
 
 
