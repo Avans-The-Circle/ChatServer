@@ -7,8 +7,6 @@ import forge from 'node-forge';
 
 
 let publicKey = forge.pki.publicKeyFromPem(readFileSync('./keys/public.pem'));
-let md = forge.md.sha256.create();
-let signature;
 const server = createServer({
     // key: readFileSync('./keys/key.pem'),
     // cert: readFileSync('./keys/cert.pem')
@@ -65,6 +63,7 @@ wss.on('connection', function connection(ws) {
             case "STREAM_FRAME":
                 console.log(`[${data.frameCounter}]incomming frame ${data.frame_timing} == ${(new Date()).getTime()}`)
                 try {
+                    let md = forge.md.sha256.create();
                     md.update(data.frame);
                     signature = data.signature;
                     let verified = publicKey.verify(md.digest().bytes(), signature);
@@ -92,9 +91,10 @@ wss.on('connection', function connection(ws) {
                 if (ws.streamId === -1) return;
                 //Message to backend
                 try {
-                    md.update(data.message, "utf8");
-                    signature = data.signature;
-                    let verify = publicKey.verify(md.digest().bytes(), signature);
+                    let mdMsg = forge.md.sha256.create();
+                    mdMsg.update(data.message, "utf8");
+                    let signatureMsg = data.signature;
+                    let verify = publicKey.verify(mdMsg.digest().bytes(), signatureMsg);
                     if (verify) {
                         wss.clients.forEach(function each(client) {
                             if (ws.streamId === client.streamId) {
