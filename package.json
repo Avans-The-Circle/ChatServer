@@ -15,6 +15,9 @@
   "author": "Avans The Circle Avans",
   "license": "ISC",
   "dependencies": {
+    "fluent-ffmpeg": "^2.1.2",
+    "https": "^1.0.0",
+    "lz-string": "^1.4.4",
     "ws": "^8.8.0"
   },
   "type": "module"
