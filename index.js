@@ -30,7 +30,8 @@ wss.on('connection', function connection(ws) {
                         client.send(JSON.stringify({
                             "type": "CHAT_MESSAGE",
                             "message": data.message,
-                            "sender": data.sender
+                            "sender": data.sender,
+                            "signature": data.signature
                         }
                         ));
                     }
