@@ -4,7 +4,7 @@ import lzstring from 'lz-string';
 import { WebSocketServer } from 'ws';
 import { readFileSync } from 'fs';
 import forge from 'node-forge';
-
+import fetch from 'cross-fetch';
 
 let publicKey = forge.pki.publicKeyFromPem(readFileSync('./keys/public.pem'));
 const server = createServer({
@@ -14,7 +14,7 @@ const server = createServer({
     // ciphers: null
 });
 
-const wss = new WebSocketServer({noServer: true});
+const wss = new WebSocketServer({ noServer: true });
 // const wssBinary = new WebSocketServer({noServer: true});
 // wssBinary.binaryType = "blob";
 //
@@ -81,7 +81,7 @@ wss.on('connection', function connection(ws) {
                         }));
                     }
                 });
-                ws.send(JSON.stringify({"type": "CONFIRM_CONNECTION", "streamId": data.streamId}));
+                ws.send(JSON.stringify({ "type": "CONFIRM_CONNECTION", "streamId": data.streamId }));
                 break;
             case "STREAM_FRAME":
                 // console.log(`[${data.frameCounter}]incomming frame ${data.frame_timing} == ${(new Date()).getTime()}`)
@@ -129,19 +129,48 @@ wss.on('connection', function connection(ws) {
                         wss.clients.forEach(function each(client) {
                             if (ws.streamId === client.streamId && client.isChatter) {
                                 client.send(JSON.stringify({
-                                        "type": "CHAT_MESSAGE",
-                                        "message": data.message,
-                                        "sender": data.sender,
-                                        "signature": data.signature
-                                    }
+                                    "type": "CHAT_MESSAGE",
+                                    "message": data.message,
+                                    "sender": data.sender,
+                                    "signature": data.signature
+                                }
                                 ));
                             }
                         });
+
                     }
                 } catch (error) {
                     console.log(error);
                 }
+                doPost(data)
+                console.log(data.message + " SENDER " + data.sender);
                 break;
         }
     });
+    async function doPost(data) {
+        var result = null;
+        var today = new Date();
+        var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+        var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+        var dateTime = date + ' ' + time;
+
+        const res = await fetch('http://localhost:8050/api/chat', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                stream: "Stream " + ws.streamId,
+                sender: data.sender,
+                message: data.message,
+                timestamp: dateTime
+
+            })
+
+        })
+
+        const json = await res.json()
+        console.log(json);
+        result = JSON.stringify(json)
+    }
 });
