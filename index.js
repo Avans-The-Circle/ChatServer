@@ -14,7 +14,7 @@ const server = createServer({
     // ciphers: null
 });
 
-const wss = new WebSocketServer({ noServer: true });
+const wss = new WebSocketServer({noServer: true});
 // const wssBinary = new WebSocketServer({noServer: true});
 // wssBinary.binaryType = "blob";
 //
@@ -81,7 +81,12 @@ wss.on('connection', function connection(ws) {
                         }));
                     }
                 });
-                ws.send(JSON.stringify({ "type": "CONFIRM_CONNECTION", "streamId": data.streamId }));
+                ws.send(JSON.stringify({"type": "CONFIRM_CONNECTION", "streamId": data.streamId}));
+                break;
+            case "FRAME_BUFFER_UPDATE":
+                ws.send(JSON.stringify({
+                    "type": "SEND_NEXT_BUFFER_UPDATE"
+                }))
                 break;
             case "STREAM_FRAME":
                 // console.log(`[${data.frameCounter}]incomming frame ${data.frame_timing} == ${(new Date()).getTime()}`)
@@ -129,11 +134,11 @@ wss.on('connection', function connection(ws) {
                         wss.clients.forEach(function each(client) {
                             if (ws.streamId === client.streamId && client.isChatter) {
                                 client.send(JSON.stringify({
-                                    "type": "CHAT_MESSAGE",
-                                    "message": data.message,
-                                    "sender": data.sender,
-                                    "signature": data.signature
-                                }
+                                        "type": "CHAT_MESSAGE",
+                                        "message": data.message,
+                                        "sender": data.sender,
+                                        "signature": data.signature
+                                    }
                                 ));
                             }
                         });
@@ -147,6 +152,7 @@ wss.on('connection', function connection(ws) {
                 break;
         }
     });
+
     async function doPost(data) {
         var result = null;
         var today = new Date();
