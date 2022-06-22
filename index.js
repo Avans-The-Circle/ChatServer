@@ -125,7 +125,9 @@ wss.on('connection', function connection(ws) {
                     mdMsg.update(data.message, "utf8");
                     let signatureMsg = data.signature;
                     let verify = publicKey.verify(mdMsg.digest().bytes(), signatureMsg);
+                    console.log("hottie")
                     if (verify) {
+                        console.log("verify hottie")
                         wss.clients.forEach(function each(client) {
                             if (ws.streamId === client.streamId && client.isChatter) {
                                 client.send(JSON.stringify({
