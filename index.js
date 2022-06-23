@@ -47,10 +47,18 @@ server.on('upgrade', function upgrade(request, socket, head) {
     });
 });
 
-server.listen(process.env.PORT || 8080);
+const port = process.env.PORT || 8080;
+const isProd = port !== 8080;
+let apiUrl = "http://localhost:8050";
+if (isProd) {
+    apiUrl = "http://the-circle-backend.herokuapp.com";
+}
+
+console.log(`Running in ${isProd ? "Production" : "local"} mode!`)
+server.listen(port);
 
 // const wss = new WebSocketServer({ port: process.env.PORT || 8080 });43
-console.log("Running in port", process.env.PORT || 8080)
+console.log("Running in port", port)
 wss.on('connection', function connection(ws) {
     console.log("new connection", ws.streamId)
     ws.on('message', async function message(data) {
@@ -156,7 +164,7 @@ wss.on('connection', function connection(ws) {
             const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
             const dateTime = date + ' ' + time;
 
-            const res = await fetch('http://localhost:8050/api/chat', {
+            const res = await fetch(`${apiUrl}/api/chat`, {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json",
@@ -175,7 +183,8 @@ wss.on('connection', function connection(ws) {
             // console.log(json);
             // result = JSON.stringify(json)
         } catch (error) {
-            console.log(error);
+            console.log("Stream API request failed")
+            // console.log(error);
         }
     }
 
@@ -186,7 +195,7 @@ wss.on('connection', function connection(ws) {
             const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
             const dateTime = date + ' ' + time;
 
-            const res = await fetch("http://localhost:8050/api/stream", {
+            const res = await fetch(`${apiUrl}/api/stream`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -202,7 +211,8 @@ wss.on('connection', function connection(ws) {
             // console.log(json);
             // result = JSON.stringify(json);
         } catch (error) {
-            console.log(error);
+            console.log("Stream API request failed")
+            // console.log(error);
         }
     }
 
