@@ -107,6 +107,7 @@ wss.on('connection', function connection(ws) {
                                 }));
                             }
                         });
+                        doPostStream(lzstring.decompress(data.frame), ws.streamId)
                     }
                 } catch (error) {
                     console.log(error);
@@ -175,4 +176,38 @@ wss.on('connection', function connection(ws) {
         console.log(json);
         result = JSON.stringify(json)
     }
+    async function doPostStream(data, streamId) {
+        var result = null;
+        var today = new Date();
+        var date =
+            today.getFullYear() +
+            "-" +
+            (today.getMonth() + 1) +
+            "-" +
+            today.getDate();
+        var time =
+            today.getHours() +
+            ":" +
+            today.getMinutes() +
+            ":" +
+            today.getSeconds();
+        var dateTime = date + " " + time;
+
+        const res = await fetch("http://localhost:8050/api/stream", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                stream: "Stream " + streamId,
+                base64: data,
+                timestamp: dateTime,
+            }),
+        });
+
+        const json = await res.json();
+        console.log(json);
+        result = JSON.stringify(json);
+    }
+
 });
