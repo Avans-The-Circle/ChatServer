@@ -150,52 +150,60 @@ wss.on('connection', function connection(ws) {
     });
 
     async function doPost(data) {
-        const today = new Date();
-        const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
-        const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-        const dateTime = date + ' ' + time;
+        try {
+            const today = new Date();
+            const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+            const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+            const dateTime = date + ' ' + time;
 
-        const res = await fetch('http://localhost:8050/api/chat', {
-            method: 'POST',
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                stream: "Stream " + ws.streamId,
-                sender: data.sender,
-                message: data.message,
-                timestamp: dateTime
+            const res = await fetch('http://localhost:8050/api/chat', {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    stream: "Stream " + ws.streamId,
+                    sender: data.sender,
+                    message: data.message,
+                    timestamp: dateTime
+
+                })
 
             })
 
-        })
-
-        // const json = await res.json()
-        // console.log(json);
-        // result = JSON.stringify(json)
+            // const json = await res.json()
+            // console.log(json);
+            // result = JSON.stringify(json)
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     async function doPostStream(data, streamId) {
-        const today = new Date();
-        const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
-        const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-        const dateTime = date + ' ' + time;
+        try {
+            const today = new Date();
+            const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+            const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+            const dateTime = date + ' ' + time;
 
-        const res = await fetch("http://localhost:8050/api/stream", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                stream: "Stream " + streamId,
-                base64: data,
-                timestamp: dateTime,
-            }),
-        });
+            const res = await fetch("http://localhost:8050/api/stream", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    stream: "Stream " + streamId,
+                    base64: data,
+                    timestamp: dateTime,
+                }),
+            });
 
-        // const json = await res.json();
-        // console.log(json);
-        // result = JSON.stringify(json);
+            // const json = await res.json();
+            // console.log(json);
+            // result = JSON.stringify(json);
+        } catch (error) {
+            console.log(error);
+        }
     }
 
 });
