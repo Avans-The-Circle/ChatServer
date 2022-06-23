@@ -14,7 +14,7 @@ const server = createServer({
     // ciphers: null
 });
 
-const wss = new WebSocketServer({ noServer: true });
+const wss = new WebSocketServer({noServer: true});
 // const wssBinary = new WebSocketServer({noServer: true});
 // wssBinary.binaryType = "blob";
 //
@@ -47,7 +47,7 @@ server.on('upgrade', function upgrade(request, socket, head) {
     });
 });
 
-server.listen(8080);
+server.listen(process.env.PORT || 8080);
 
 // const wss = new WebSocketServer({ port: process.env.PORT || 8080 });43
 console.log("Running in port", process.env.PORT || 8080)
@@ -81,7 +81,7 @@ wss.on('connection', function connection(ws) {
                         }));
                     }
                 });
-                ws.send(JSON.stringify({ "type": "CONFIRM_CONNECTION", "streamId": data.streamId }));
+                ws.send(JSON.stringify({"type": "CONFIRM_CONNECTION", "streamId": data.streamId}));
                 break;
             case "STREAM_FRAME":
                 // console.log(`[${data.frameCounter}]incomming frame ${data.frame_timing} == ${(new Date()).getTime()}`)
@@ -120,23 +120,21 @@ wss.on('connection', function connection(ws) {
                 break;
             case "SEND_MESSAGE":
                 if (ws.streamId === -1) return;
-                //Message to backend
+                console.log(`message '${data.message}' received from '${data.sender}'`);
                 try {
                     let mdMsg = forge.md.sha256.create();
                     mdMsg.update(data.message, "utf8");
                     let signatureMsg = data.signature;
                     let verify = publicKey.verify(mdMsg.digest().bytes(), signatureMsg);
-                    console.log("hottie")
                     if (verify) {
-                        console.log("verify hottie")
                         wss.clients.forEach(function each(client) {
                             if (ws.streamId === client.streamId && client.isChatter) {
                                 client.send(JSON.stringify({
-                                    "type": "CHAT_MESSAGE",
-                                    "message": data.message,
-                                    "sender": data.sender,
-                                    "signature": data.signature
-                                }
+                                        "type": "CHAT_MESSAGE",
+                                        "message": data.message,
+                                        "sender": data.sender,
+                                        "signature": data.signature
+                                    }
                                 ));
                             }
                         });
@@ -145,17 +143,17 @@ wss.on('connection', function connection(ws) {
                 } catch (error) {
                     console.log(error);
                 }
+                //Message to backend
                 doPost(data)
-                console.log(data.message + " SENDER " + data.sender);
                 break;
         }
     });
+
     async function doPost(data) {
-        var result = null;
-        var today = new Date();
-        var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
-        var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-        var dateTime = date + ' ' + time;
+        const today = new Date();
+        const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+        const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+        const dateTime = date + ' ' + time;
 
         const res = await fetch('http://localhost:8050/api/chat', {
             method: 'POST',
@@ -172,26 +170,16 @@ wss.on('connection', function connection(ws) {
 
         })
 
-        const json = await res.json()
-        console.log(json);
-        result = JSON.stringify(json)
+        // const json = await res.json()
+        // console.log(json);
+        // result = JSON.stringify(json)
     }
+
     async function doPostStream(data, streamId) {
-        var result = null;
-        var today = new Date();
-        var date =
-            today.getFullYear() +
-            "-" +
-            (today.getMonth() + 1) +
-            "-" +
-            today.getDate();
-        var time =
-            today.getHours() +
-            ":" +
-            today.getMinutes() +
-            ":" +
-            today.getSeconds();
-        var dateTime = date + " " + time;
+        const today = new Date();
+        const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+        const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+        const dateTime = date + ' ' + time;
 
         const res = await fetch("http://localhost:8050/api/stream", {
             method: "POST",
@@ -205,9 +193,9 @@ wss.on('connection', function connection(ws) {
             }),
         });
 
-        const json = await res.json();
-        console.log(json);
-        result = JSON.stringify(json);
+        // const json = await res.json();
+        // console.log(json);
+        // result = JSON.stringify(json);
     }
 
 });
